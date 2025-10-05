@@ -65,7 +65,9 @@ export async function POST(req: NextRequest) {
             system: systemPrompt,
             messages: [
                 { role: "user", content: `Create a lesson based on this outline: "${outline}"` }
-            ]
+            ],
+            maxOutputTokens: 2000,
+            temperature: 0.4
         });
 
         const generatedContent = result.text;
