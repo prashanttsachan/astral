@@ -1,0 +1,7 @@
+{
+    "functions": {
+        "app/api/lesson/route.ts": {
+            "maxDuration": 90
+        }
+    }
+}
