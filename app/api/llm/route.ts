@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { openai } from "@ai-sdk/openai";
 import * as ai from "ai";
-import { stepCountIs, tool } from "ai";
 import { wrapAISDK } from "langsmith/experimental/vercel";
 import { z } from 'zod';
 
@@ -61,34 +60,26 @@ export async function POST(req: NextRequest) {
             export default Lesson;
         `;
 
-        const generatedContent = await generateText({
-            model: openai("gpt-5-mini"),
+        const result = await generateText({
+            model: openai("gpt-4o-mini"),
             system: systemPrompt,
             messages: [
                 { role: "user", content: `Create a lesson based on this outline: "${outline}"` }
-            ],
-            tools: {
-                getLesson: tool({
-                    description: "Get lesson for a given outline.",
-                    inputSchema: z.object({
-                        outline: z.string().describe("The outline to get the lesson for"),
-                    }),
-                    execute: async ({ outline }) => `It's always stunning to generate lession for ${outline}!`,
-                }),
-            },
-            stopWhen: stepCountIs(5),
+            ]
         });
+
+        const generatedContent = result.text;
 
         if (!generatedContent) {
             throw new Error("AI failed to generate content.");
         }
 
-        const titleMatch = generatedContent.text.match(/<h1[^>]*>([^<]+)<\/h1>/);
+        const titleMatch = generatedContent.match(/<h1[^>]*>([^<]+)<\/h1>/);
         const title = titleMatch ? titleMatch[1] : `Lesson for: "${outline.substring(0, 20)}..."`;
 
         const { error: updateError } = await supabase
             .from('lessons')
-            .update({ content: generatedContent.text, status: 'generated', title: title })
+            .update({ content: generatedContent, status: 'generated', title: title })
             .eq('id', lessonId);
 
         if (updateError) {
