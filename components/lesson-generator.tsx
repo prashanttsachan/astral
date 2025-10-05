@@ -31,8 +31,16 @@ export function LessonGenerator() {
                 const errorMessage = errorData.error?.outline?._errors[0] || 'Failed to start lesson generation.';
                 throw new Error(errorMessage);
             }
+            const lesson = await response.json();
             setSuccess('Lesson generation started! It will appear in the list shortly.');
             setOutline('');
+            await fetch('/api/llm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ outline, lessonId: lesson.id }),
+            });
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An unknown error occurred.');
         } finally {
