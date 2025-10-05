@@ -12,8 +12,6 @@ export function RealtimeLessons({ serverLessons }: RealtimeLessonsProps) {
     const [lessons, setLessons] = useState(serverLessons);
     const supabase = createClient();
 
-    // This effect ensures that the client-side state is updated
-    // if the server-rendered props change upon navigation.
     useEffect(() => {
         setLessons(serverLessons);
     }, [serverLessons]);
@@ -25,11 +23,9 @@ export function RealtimeLessons({ serverLessons }: RealtimeLessonsProps) {
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'lessons' },
                 (payload) => {
-                    // New lesson created, add it to the top of the list
                     if (payload.eventType === 'INSERT') {
                         setLessons((currentLessons) => [payload.new as Lesson, ...currentLessons]);
                     }
-                    // A lesson was updated (e.g., status changed), find and update it
                     if (payload.eventType === 'UPDATE') {
                         setLessons((currentLessons) =>
                             currentLessons.map(lesson =>
@@ -37,12 +33,15 @@ export function RealtimeLessons({ serverLessons }: RealtimeLessonsProps) {
                             )
                         );
                     }
-                    // Note: Deletes are not handled, but could be added here if needed.
+                    if (payload.eventType === 'DELETE') {
+                        setLessons((currentLessons) =>
+                            currentLessons.filter(lesson => lesson.id !== payload.old.id)
+                        );
+                    }
                 }
             )
             .subscribe();
 
-        // Cleanup subscription on component unmount
         return () => {
             supabase.removeChannel(channel);
         };
