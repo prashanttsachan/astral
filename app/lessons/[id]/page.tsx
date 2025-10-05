@@ -7,16 +7,17 @@ import { LessonRenderer } from '@/components/lesson-rendoror';
 // compatibility with Next.js's expected props structure for pages.
 // This can help resolve complex or misleading TypeScript errors.
 type PageProps = {
-    params: { id: string };
-    searchParams?: { [key: string]: string | string[] | undefined };
+    params: Promise<{ id: string }>;
 };
 
 export default async function LessonPage({ params }: PageProps) {
     const supabase = await createClient();
+    const id = (await params).id;
+
     const { data: lesson, error } = await supabase
         .from('lessons')
         .select('id, title, content, outline')
-        .eq('id', params.id)
+        .eq('id', id)
         .single();
 
     if (error || !lesson) {
