@@ -28,7 +28,6 @@ export function LessonGenerator() {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                // Extract Zod error message if available
                 const errorMessage = errorData.error?.outline?._errors[0] || 'Failed to start lesson generation.';
                 throw new Error(errorMessage);
             }

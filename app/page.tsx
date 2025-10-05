@@ -13,7 +13,6 @@ export default async function HomePage() {
 
 	if (error) {
 		console.error('Error fetching lessons:', error);
-		// Handle error appropriately
 	}
 
 	const initialLessons = lessons ?? [];

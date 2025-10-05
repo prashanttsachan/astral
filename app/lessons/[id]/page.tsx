@@ -3,9 +3,6 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { LessonRenderer } from '@/components/lesson-rendoror';
 
-// Defining a specific type for the page props is a robust way to ensure
-// compatibility with Next.js's expected props structure for pages.
-// This can help resolve complex or misleading TypeScript errors.
 type PageProps = {
     params: Promise<{ id: string }>;
 };

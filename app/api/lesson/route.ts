@@ -4,7 +4,7 @@ import { OpenAI } from "openai";
 import { z } from 'zod';
 
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+    apiKey: process.env.NEXT_OPENAI_API_KEY,
 });
 
 const lessonRequestSchema = z.object({
@@ -23,7 +23,6 @@ export async function POST(req: NextRequest) {
 
     const { outline } = parsed.data;
 
-    // 1. Create initial lesson record in Supabase
     const { data: lesson, error: insertError } = await supabase
         .from('lessons')
         .insert({
@@ -40,9 +39,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Failed to create lesson.' }, { status: 500 });
     }
 
-    // 2. Asynchronously generate the lesson content (don't block the response)
     generateLessonContent(lesson.id, outline);
-
     return NextResponse.json(lesson, { status: 201 });
 }
 
@@ -52,7 +49,6 @@ async function generateLessonContent(lessonId: string, outline: string) {
     try {
         console.log(`Starting generation for lesson ${lessonId}`);
 
-        // A more detailed system prompt
         const systemPrompt = `
             You are an expert educational content creator specializing in creating interactive and engaging lessons for children using React components and Tailwind CSS.
             Your task is to generate a single TSX file for a Next.js application.
@@ -85,8 +81,7 @@ async function generateLessonContent(lessonId: string, outline: string) {
             messages: [
                 { role: "system", content: systemPrompt },
                 { role: "user", content: `Create a lesson based on this outline: "${outline}"` }
-            ],
-            // You might want to add temperature, max_tokens, etc.
+            ]
         });
 
         const generatedContent = completion.choices[0].message.content;
@@ -95,12 +90,9 @@ async function generateLessonContent(lessonId: string, outline: string) {
             throw new Error("AI failed to generate content.");
         }
 
-        // Extract title from the generated content
         const titleMatch = generatedContent.match(/<h1[^>]*>([^<]+)<\/h1>/);
         const title = titleMatch ? titleMatch[1] : `Lesson for: "${outline.substring(0, 20)}..."`;
 
-
-        // 3. Update the lesson in Supabase with the generated content
         const { error: updateError } = await supabase
             .from('lessons')
             .update({ content: generatedContent, status: 'generated', title: title })
@@ -113,7 +105,6 @@ async function generateLessonContent(lessonId: string, outline: string) {
 
     } catch (error) {
         console.error(`Error generating content for lesson ${lessonId}:`, error);
-        // If generation fails, update status to 'failed'
         const { error: updateError } = await supabase.from('lessons')
             .update({ status: 'failed', content: `// Generation failed: ${error instanceof Error ? error.message : 'Unknown error'}` })
             .eq('id', lessonId);
