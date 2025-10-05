@@ -39,16 +39,24 @@ export const LessonRenderer = ({ content }: LessonRendererProps) => {
             let code = content.replace(/import\s+.*\s+from\s+['"].*['"];?/g, '');
             code = code.replaceAll('text-white', 'text-info');
             code = code.replaceAll('bg-white', 'bg-info')
-            let componentName = '';
-            const namedExportMatch = code.match(/export\s+default\s+([A-Za-z0-9_]+);?/);
-            if (namedExportMatch) {
-                componentName = namedExportMatch[1];
+
+            let componentName;
+            const functionMatch = code.match(/export\s+default\s+function\s+([A-Za-z0-9_]+)/);
+            const variableMatch = code.match(/export\s+default\s+([A-Za-z0-9_]+);?/);
+
+            if (functionMatch) {
+                componentName = functionMatch[1];
+                code = code.replace(/export\s+default\s+/, '');
+            } else if (variableMatch) {
+                componentName = variableMatch[1];
                 code = code.replace(/export\s+default\s+[A-Za-z0-9_]+;?/, '');
-            } else if (code.includes('export default')) {
-                componentName = 'LessonComponent';
-                code = code.replace(/export\s+default/, `const ${componentName} =`);
             } else {
-                throw new Error("Could not find a 'default export' in the AI-generated code.");
+                if (code.includes('export default')) {
+                    code = 'LessonComponent';
+                    code = code.replace(/export\s+default/, `const ${componentName} =`);
+                } else {
+                    throw new Error("Could not find a 'default export' in the AI-generated code.");
+                }
             }
 
             const transformedCode = window.Babel.transform(code, {
