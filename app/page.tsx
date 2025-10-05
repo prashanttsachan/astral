@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
 import { LessonGenerator } from '@/components/lesson-generator';
-import { LessonsTable } from '@/components/lesson-table';
 import { RealtimeLessons } from '@/components/realtime-lesson';
 
 export default async function HomePage() {

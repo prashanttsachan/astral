@@ -6,19 +6,16 @@ import React, { useEffect, useState, useMemo, Suspense } from 'react';
 function useBabel() {
     const [isBabelLoaded, setIsBabelLoaded] = useState(false);
     useEffect(() => {
-        // Check if Babel is already on the window object
         if (window.Babel) {
             setIsBabelLoaded(true);
             return;
         }
-        // If not, create and append the script tag
         const script = document.createElement('script');
         script.src = "https://unpkg.com/@babel/standalone/babel.min.js";
         script.async = true;
         script.onload = () => setIsBabelLoaded(true);
         document.body.appendChild(script);
 
-        // Cleanup function to remove the script
         return () => {
             document.body.removeChild(script);
         }
@@ -34,45 +31,60 @@ export const LessonRenderer = ({ content }: LessonRendererProps) => {
     const isBabelLoaded = useBabel();
     const [error, setError] = useState<string | null>(null);
 
-    // useMemo will re-calculate the component only when content or babel loading status changes
     const RenderedComponent = useMemo(() => {
         if (!isBabelLoaded || !content) {
             return null;
         }
 
         try {
-            // Attempt to find a component declaration to make evaluation more robust
-            const componentNameMatch = content.match(/(?:const|function)\s+([A-Z]\w+)\s*=\s*\(\)/);
-            if (!componentNameMatch?.[1]) {
-                throw new Error("Could not find a valid React component declaration in the code (e.g., 'const Lesson = () => ...').");
+            // Step 1: Sanitize the code by removing imports.
+            let code = content.replace(/import\s+.*\s+from\s+['"].*['"];?/g, '');
+            let componentName = '';
+
+            // Step 2: Identify the exported component. Handle both named and anonymous default exports.
+            const namedExportMatch = code.match(/export\s+default\s+([A-Za-z0-9_]+);?/);
+            if (namedExportMatch) {
+                componentName = namedExportMatch[1];
+                // Remove the export line to avoid it being in the transformed code
+                code = code.replace(/export\s+default\s+[A-Za-z0-9_]+;?/, '');
+            } else if (code.includes('export default')) {
+                // Handle anonymous exports, e.g., "export default () => ..."
+                componentName = 'LessonComponent'; // Assign a consistent name
+                code = code.replace(/export\s+default/, `const ${componentName} =`);
+            } else {
+                throw new Error("Could not find a 'default export' in the AI-generated code.");
             }
-            const componentName = componentNameMatch[1];
 
-            // Remove imports and the default export to prepare the code for evaluation
-            const codeToEval = content
-                .replace(/import\s+.*\s+from\s+['"].*['"];?/g, '')
-                .replace(/export\s+default\s+\w+;?/g, '');
-
-            const finalCode = `${codeToEval}\nreturn ${componentName};`;
-
-            const transformedCode = window.Babel.transform(finalCode, {
+            // Step 3: Transform only the component's source code with Babel.
+            // This is now a valid script (e.g., just function/const declarations).
+            const transformedCode = window.Babel.transform(code, {
                 presets: ['react', 'typescript'],
                 filename: 'lesson.tsx'
             }).code;
 
-            if (transformedCode) {
-                // `new Function()` creates a function from a string of code.
-                // We pass 'React' as an argument so the transpiled JSX (React.createElement) works.
-                const lessonFunction = new Function('React', transformedCode);
-                const LessonComponent = lessonFunction(React);
-                setError(null); // Clear previous errors
-                return LessonComponent;
-            } else {
-                throw new Error('Babel transformation returned empty or invalid code.');
+            if (!transformedCode) {
+                throw new Error('Babel transformation resulted in empty code.');
             }
+
+            // Step 4: Create the full function body for `new Function`.
+            // This body will contain the transformed code AND the return statement.
+            const functionBody = `${transformedCode}\nreturn ${componentName};`;
+
+            // Step 5: Create the component function, injecting React and its hooks into the scope.
+            // This makes `useState`, `useEffect`, etc., available directly in the AI code.
+            const scope = { React, useState: React.useState, useEffect: React.useEffect, useMemo: React.useMemo, useCallback: React.useCallback, useRef: React.useRef };
+            const scopeKeys = Object.keys(scope);
+            const scopeValues = Object.values(scope);
+
+            const lessonFunction = new Function(...scopeKeys, functionBody);
+            const LessonComponent = lessonFunction(...scopeValues);
+
+            setError(null); // Clear previous errors
+            return LessonComponent;
+
         } catch (e) {
             console.error('Error rendering lesson content:', e);
-            setError(e instanceof Error ? e.message : 'An unknown error occurred during rendering.');
+            setError(e instanceof Error ? `${e.name}: ${e.message}` : 'An unknown error occurred during rendering.');
             return null;
         }
     }, [content, isBabelLoaded]);
@@ -95,8 +107,7 @@ export const LessonRenderer = ({ content }: LessonRendererProps) => {
         return <div className="text-center p-8">Loading lesson renderer...</div>
     }
 
-    // Suspense can be used here for better loading states if components are code-split
-    return RenderedComponent ? <Suspense fallback={<div>Loading Lesson...</div>}>{React.createElement(RenderedComponent)}</Suspense> : <div className="text-center p-8">Loading lesson content...</div>;
+    return RenderedComponent ? <Suspense fallback={<div>Loading Lesson...</div>}>{React.createElement(RenderedComponent)}</Suspense> : <div className="text-center p-8">Preparing lesson...</div>;
 };
 
 // We need to declare Babel on the window object for TypeScript to not throw an error
@@ -105,3 +116,4 @@ declare global {
         Babel: any;
     }
 }
+

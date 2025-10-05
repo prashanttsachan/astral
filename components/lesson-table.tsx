@@ -55,7 +55,7 @@ export function LessonsTable({ lessons }: LessonsTableProps) {
                                 </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {new Date(lesson.created_at).toLocaleString()}
+                                {new Date(lesson.created_at).toDateString()}, {new Date(lesson.created_at).toTimeString()}
                             </td>
                         </tr>
                     ))}
