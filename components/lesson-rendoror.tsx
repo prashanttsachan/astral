@@ -37,6 +37,8 @@ export const LessonRenderer = ({ content }: LessonRendererProps) => {
 
         try {
             let code = content.replace(/import\s+.*\s+from\s+['"].*['"];?/g, '');
+            code = code.replaceAll('text-white', 'text-info');
+            code = code.replaceAll('bg-white', 'bg-info')
             let componentName = '';
             const namedExportMatch = code.match(/export\s+default\s+([A-Za-z0-9_]+);?/);
             if (namedExportMatch) {
