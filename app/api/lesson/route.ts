@@ -52,23 +52,29 @@ async function generateLessonContent(lessonId: string, outline: string) {
         const systemPrompt = `
             You are an expert educational content creator specializing in creating interactive and engaging lessons for children using React components and Tailwind CSS.
             Your task is to generate a single TSX file for a Next.js application.
+
+            **CRITICAL STYLING RULES:**
+            1.  **High Contrast is Mandatory:** All text MUST have high contrast against its background. The lesson will be displayed on a page with a white or very light gray background.
+            2.  **Avoid Light Text Colors:** To ensure readability, DO NOT use light-colored text classes like \`text-white\`, \`text-gray-100\`, \`text-slate-200\`, etc., for primary content, as they will be invisible. Use dark, legible text colors like \`text-gray-800\`, \`text-slate-900\`, or other dark shades.
+
             The output MUST be a valid TSX component that can be rendered directly.
             Do NOT include any markdown formatting like \`\`\`tsx or \`\`\`. Just return the raw code.
             The component should be self-contained.
-            Use Tailwind CSS for styling to make the lesson visually appealing and easy to read.
+            Use Tailwind CSS for styling to make the lesson visually appealing, following the contrast rules above.
             Incorporate interactive elements where appropriate (e.g., simple quizzes, clickable elements to reveal information).
             For quizzes, provide immediate feedback.
             You can use SVGs to make it more engaging.
-            The main export should be a function component named 'Lesson'.
+            The main export should be a function component, preferably named 'Lesson'.
+
             Here is an example structure:
 
-            import React from 'react';
+            import React, { useState } from 'react';
 
             const Lesson = () => {
             return (
-                <div className="p-4 font-sans">
+                <div className="p-4 font-sans text-gray-800">
                 <h1 className="text-3xl font-bold mb-4 text-indigo-700">Lesson Title</h1>
-                {/* ... rest of the lesson content ... */}
+                {/* ... rest of the lesson content using dark, high-contrast text ... */}
                 </div>
             );
             };
