@@ -21,7 +21,7 @@ const Lesson = () => {
             <h1 className="text-3xl font-bold mb-4 text-indigo-700">Learning Long Division</h1>
 
             <p className="text-lg mb-3">
-                Long division is a method for dividing large numbers into smaller, more manageable pieces. Here's a quick guide to mastering long division.
+                Long division is a method for dividing large numbers into smaller, more manageable pieces. Here&apos;s a quick guide to mastering long division.
             </p>
 
             <h2 className="text-2xl font-semibold mb-2 text-indigo-600">Steps to Perform Long Division</h2>
@@ -36,7 +36,7 @@ const Lesson = () => {
             <div className="bg-blue-100 p-4 rounded-lg mb-6">
                 <h3 className="text-xl font-semibold mb-2 text-blue-800">Example</h3>
                 <p className="mb-2">
-                    Let's divide <strong>955</strong> by <strong>190</strong>.
+                    Let&apos;s divide <strong>955</strong> by <strong>190</strong>.
                 </p>
                 <p>Steps:</p>
                 <ol className="list-decimal ml-5">

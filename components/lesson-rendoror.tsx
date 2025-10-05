@@ -110,10 +110,19 @@ export const LessonRenderer = ({ content }: LessonRendererProps) => {
     return RenderedComponent ? <Suspense fallback={<div>Loading Lesson...</div>}>{React.createElement(RenderedComponent)}</Suspense> : <div className="text-center p-8">Preparing lesson...</div>;
 };
 
+// Define a more specific type for the Babel object to satisfy the linter
+interface BabelTransformResult {
+    code: string | null;
+}
+
+interface Babel {
+    transform(code: string, options?: object): BabelTransformResult;
+}
+
 // We need to declare Babel on the window object for TypeScript to not throw an error
 declare global {
     interface Window {
-        Babel: any;
+        Babel: Babel;
     }
 }
 

@@ -1,15 +1,17 @@
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
-import { LessonRenderer } from '@/components/lesson-rendoror';
 import Link from 'next/link';
+import { LessonRenderer } from '@/components/lesson-rendoror';
 
-type LessonPageProps = {
-    params: {
-        id: string;
-    };
+// Defining a specific type for the page props is a robust way to ensure
+// compatibility with Next.js's expected props structure for pages.
+// This can help resolve complex or misleading TypeScript errors.
+type PageProps = {
+    params: { id: string };
+    searchParams?: { [key: string]: string | string[] | undefined };
 };
 
-export default async function LessonPage({ params }: LessonPageProps) {
+export default async function LessonPage({ params }: PageProps) {
     const supabase = await createClient();
     const { data: lesson, error } = await supabase
         .from('lessons')
@@ -28,7 +30,7 @@ export default async function LessonPage({ params }: LessonPageProps) {
                 <div className="container mx-auto px-4 py-4 flex justify-between items-center">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">{lesson.title}</h1>
-                        <p className="text-sm text-gray-500 mt-1">Lesson Outline: "{lesson.outline}"</p>
+                        <p className="text-sm text-gray-500 mt-1">Lesson Outline: &quot;{lesson.outline}&quot;</p>
                     </div>
                     <Link href="/" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                         &larr; Back to Lessons
@@ -50,3 +52,4 @@ export default async function LessonPage({ params }: LessonPageProps) {
         </div>
     );
 }
+
